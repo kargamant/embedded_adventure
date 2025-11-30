@@ -36,7 +36,7 @@ void app_main(void)
         LEDC_CHANNEL_0,
         LEDC_INTR_DISABLE,
         LEDC_TIMER_0,
-        512, // pwm duty can be adjusted here
+        128, // pwm duty can be adjusted here
         0
     };
 
