@@ -27,8 +27,8 @@ void app_main(void)
     printf("wifi scan started!\n");
 
     // retrievement
-    uint16_t ap_number = 10;
-    wifi_ap_record_t ap_records[10];
+    uint16_t ap_number = 12;
+    wifi_ap_record_t ap_records[12];
     esp_wifi_scan_get_ap_records(&ap_number, ap_records);
 
     for(int i=0; i<ap_number; i++)
@@ -40,21 +40,35 @@ void app_main(void)
 
     // connect
 
-    // wifi_interface_t mode = WIFI_IF_STA;
-    // unsigned char network_name[32] = "Sunshine";
-    // unsigned char password[64] = "140009Pobratimov2275"; 
-    // wifi_sta_config_t configuration;
-    // configuration.ssid = (uint8_t[32]){'S', 'u', 'n', 's', 'h', 'i', 'n', 'e'};
-    // configuration.password = password;
-    // esp_wifi_set_config(mode, &configuration);
+    wifi_interface_t mode = WIFI_IF_STA;
+    unsigned char network_name[32] = "abcdefg";
+    unsigned char password[64] = "abcdefg"; 
+    wifi_sta_config_t sta_configuration;
     
-    // esp_err_t err_code = esp_wifi_connect();
+    for(int i=0; i<17; i++)
+    {
+        sta_configuration.ssid[i] = network_name[i];
+    }
+    
+    for(int i=0; i<12; i++)
+    {
+        sta_configuration.password[i] = password[i]; 
+    }
 
-    // if(err_code == ESP_OK)
-    //     printf("successssssssssssssssssss\n");
-    // else
-    //     printf("couldn't connect sorry bro\n");
+    sta_configuration.sae_pwe_h2e = WPA3_SAE_PWE_BOTH;
 
+    wifi_config_t configuration;
+    configuration.sta = sta_configuration;
+    esp_wifi_set_config(mode, &configuration);
+    
+    esp_err_t err_code = esp_wifi_connect();
+
+    if(err_code == ESP_OK)
+        printf("successssssssssssssssssss\n");
+    else
+        printf("couldn't connect sorry bro\n");
+
+    vTaskDelay(20000 / portTICK_PERIOD_MS);
 
     // stopping point
     esp_wifi_stop();
