@@ -34,30 +34,63 @@ void app_main(void)
 {
     printf("Hello, monkeys!\n\n");
 
-    // system level stuff
-    nvs_flash_init();
+    // initting NVS flash
+    esp_err_t nvs_err = nvs_flash_init();
+    if(nvs_err == ESP_ERR_NVS_NO_FREE_PAGES)
+    {
+        nvs_flash_erase();
+        nvs_flash_init();
+    }
+
+    // initing network interface of esp32
     esp_netif_init();
 
     // event loop and handler instantiation
     esp_event_loop_create_default();
+
+    // creating wifi station in wifi driver
+    esp_netif_create_default_wifi_sta();
+
+    // default config
+    wifi_init_config_t config = WIFI_INIT_CONFIG_DEFAULT();
+    esp_wifi_init(&config);
+    printf("wifi driver initted!\n");
+
+    esp_event_handler_instance_t wifi_event_handler_instance;
     esp_event_handler_instance_register(
             WIFI_EVENT,
             ESP_EVENT_ANY_ID,
             &wifi_event_handler,
             NULL,
-            NULL
+            &wifi_event_handler_instance
     );
 
+    esp_event_handler_instance_t ip_event_handler_instance;
+    esp_event_handler_instance_register(
+            IP_EVENT,
+            ESP_EVENT_ANY_ID,
+            &wifi_event_handler,
+            NULL,
+            &ip_event_handler_instance
+    );
+
+    wifi_interface_t mode = WIFI_IF_STA;
+    wifi_config_t configuration = 
+    {
+        .sta = 
+        {
+            .ssid = "abcdefghijklmnop",
+            .password = "abcdefghijklmnop",
+            .threshold.authmode = WIFI_AUTH_WPA2_PSK
+        }
+    };
+
+    // configuration.sta.sae_pwe_h2e = WPA3_SAE_PWE_BOTH;
     
-    esp_netif_create_default_wifi_sta();
-    printf("some default things\n");
-
-    wifi_init_config_t config = WIFI_INIT_CONFIG_DEFAULT();
-    esp_wifi_init(&config);
-    printf("wifi driver initted!\n");
-
     esp_wifi_set_mode(WIFI_MODE_STA);
-    printf("wifi station mode set!\n");
+    esp_wifi_set_config(mode, &configuration);
+
+
 
     // esp_wifi_scan_start(NULL, true);
     // printf("wifi scan started!\n");
@@ -74,44 +107,7 @@ void app_main(void)
     //     printf("mac address: %x:%x:%x:%x:%x:%x\n", ap.bssid[0], ap.bssid[1], ap.bssid[2], ap.bssid[3], ap.bssid[4], ap.bssid[5]);
     // }
 
-    // connect
-
-    wifi_interface_t mode = WIFI_IF_STA;
-    const char* network_name = "Sunshine";
-    const char* password = "140009Pobratimov2275"; 
-    wifi_sta_config_t sta_configuration;
-
-    for(int i=0; i<32; i++)
-    {
-        sta_configuration.ssid[i] = 0;
-    }
-    
-    for(int i=0; i<64; i++)
-    {
-        sta_configuration.password[i] = 0;
-    }
-
-    memcpy(sta_configuration.ssid, network_name, strlen(network_name));
-    memcpy(sta_configuration.password, password, strlen(password));
-
-    printf("verification:\n");
-    for(int i=0; i<32; i++)
-    {
-        printf("ssid[i]: %d\n", sta_configuration.ssid[i]);
-    }
-    
-    for(int i=0; i<64; i++)
-    {
-        printf("password[i]: %d\n", sta_configuration.password[i]);
-    }
-
-    sta_configuration.sae_pwe_h2e = WPA3_SAE_PWE_BOTH;
-    sta_configuration.threshold.authmode = WIFI_AUTH_WEP;
-
-    wifi_config_t configuration;
-    configuration.sta = sta_configuration;
-    esp_wifi_set_config(mode, &configuration);
-    
+    // connect    
     esp_wifi_start();
     printf("wifi service started!\n");
 
