@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "esp_wifi.h"
 #include "nvs_flash.h"
+#include "esp_http_client.h"
 #include <string.h>
 
 static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data)
@@ -29,32 +30,14 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t e
     }
 }
 
-
-void app_main(void)
+void connect_to_wifi(const char* ssid, const char* pswd)
 {
-    printf("Hello, monkeys!\n\n");
-
-    // initting NVS flash
-    esp_err_t nvs_err = nvs_flash_init();
-    if(nvs_err == ESP_ERR_NVS_NO_FREE_PAGES)
-    {
-        nvs_flash_erase();
-        nvs_flash_init();
-    }
-
-    // initing network interface of esp32
-    esp_netif_init();
-
-    // event loop and handler instantiation
-    esp_event_loop_create_default();
-
     // creating wifi station in wifi driver
     esp_netif_create_default_wifi_sta();
 
     // default config
     wifi_init_config_t config = WIFI_INIT_CONFIG_DEFAULT();
     esp_wifi_init(&config);
-    printf("wifi driver initted!\n");
 
     esp_event_handler_instance_t wifi_event_handler_instance;
     esp_event_handler_instance_register(
@@ -79,44 +62,57 @@ void app_main(void)
     {
         .sta = 
         {
-            .ssid = "abcdefghijklmnop",
-            .password = "abcdefghijklmnop",
+            //.ssid = ssid,
+            //.password = pswd,
             .threshold.authmode = WIFI_AUTH_WPA2_PSK
         }
     };
 
-    // configuration.sta.sae_pwe_h2e = WPA3_SAE_PWE_BOTH;
+    memcpy(configuration.sta.ssid, ssid, strlen(ssid));
+    memcpy(configuration.sta.password, pswd, strlen(pswd));
     
     esp_wifi_set_mode(WIFI_MODE_STA);
     esp_wifi_set_config(mode, &configuration);
 
-
-
-    // esp_wifi_scan_start(NULL, true);
-    // printf("wifi scan started!\n");
-
-    // // retrievement
-    // uint16_t ap_number = 12;
-    // wifi_ap_record_t ap_records[12];
-    // esp_wifi_scan_get_ap_records(&ap_number, ap_records);
-
-    // for(int i=0; i<ap_number; i++)
-    // {
-    //     wifi_ap_record_t ap = ap_records[i];
-    //     printf("wifi_name: %s\n", (const char*)ap.ssid);
-    //     printf("mac address: %x:%x:%x:%x:%x:%x\n", ap.bssid[0], ap.bssid[1], ap.bssid[2], ap.bssid[3], ap.bssid[4], ap.bssid[5]);
-    // }
-
     // connect    
     esp_wifi_start();
-    printf("wifi service started!\n");
 
     esp_err_t err_code = esp_wifi_connect();
+}
 
-    // if(err_code == ESP_OK)
-    //     printf("successssssssssssssssssss\n");
-    // else
-    //     printf("couldn't connect sorry bro\n");
+
+void app_main(void)
+{
+    printf("Hello, monkeys!\n\n");
+
+    // initting NVS flash
+    esp_err_t nvs_err = nvs_flash_init();
+    if(nvs_err == ESP_ERR_NVS_NO_FREE_PAGES)
+    {
+        nvs_flash_erase();
+        nvs_flash_init();
+    }
+
+    // initing network interface of esp32
+    esp_netif_init();
+
+    // event loop and handler instantiation
+    esp_event_loop_create_default();
+
+    connect_to_wifi("Sunshine", "140009Pobratimov2275");
+
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
+
+    // http client
+    esp_http_client_config_t http_config = 
+    {
+        .url = "http://httpforever.com/"
+    };
+
+    esp_http_client_handle_t http_handle = esp_http_client_init(&http_config);
+    esp_http_client_perform(http_handle);
+    int http_code = esp_http_client_get_status_code(http_handle);
+    printf("httpforever answered with %d code\n", http_code);
 
     vTaskDelay(20000 / portTICK_PERIOD_MS);
 
