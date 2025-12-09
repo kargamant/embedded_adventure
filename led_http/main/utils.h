@@ -2,6 +2,9 @@
 #include "esp_wifi.h"
 #include "nvs_flash.h"
 #include "esp_http_client.h"
+#include "driver/gpio.h"
+#include "freertos/FreeRTOS.h"
+#include "esp_http_server.h"
 #include <string.h>
 
 static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data)
@@ -30,7 +33,7 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t e
     }
 }
 
-void netif_init()
+void netif_setup()
 {
     // initting NVS flash
     esp_err_t nvs_err = nvs_flash_init();
@@ -99,49 +102,6 @@ void connect_to_wifi(const char* ssid, const char* pswd)
 
 void wifi_off()
 {
-    // stopping point
-    esp_wifi_stop();
-    printf("wifi service stopped!\n");
-
-    esp_wifi_deinit();
-    printf("wifi driver deinitted!\n");
-}
-
-void app_main(void)
-{
-    printf("Hello, monkeys!\n\n");
-
-    // initting NVS flash
-    esp_err_t nvs_err = nvs_flash_init();
-    if(nvs_err == ESP_ERR_NVS_NO_FREE_PAGES)
-    {
-        nvs_flash_erase();
-        nvs_flash_init();
-    }
-
-    // initing network interface of esp32
-    esp_netif_init();
-
-    // event loop and handler instantiation
-    esp_event_loop_create_default();
-
-    connect_to_wifi("Sunshine", "140009Pobratimov2275");
-
-    vTaskDelay(5000 / portTICK_PERIOD_MS);
-
-    // http client
-    esp_http_client_config_t http_config = 
-    {
-        .url = "http://httpforever.com/"
-    };
-
-    esp_http_client_handle_t http_handle = esp_http_client_init(&http_config);
-    esp_http_client_perform(http_handle);
-    int http_code = esp_http_client_get_status_code(http_handle);
-    printf("httpforever answered with %d code\n", http_code);
-
-    vTaskDelay(20000 / portTICK_PERIOD_MS);
-
     // stopping point
     esp_wifi_stop();
     printf("wifi service stopped!\n");
