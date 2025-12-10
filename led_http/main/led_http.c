@@ -8,10 +8,10 @@
 esp_err_t red_uri_handler(httpd_req_t* req)
 {
     static uint8_t state = 0;
-    state &= 0x1;
-    gpio_set_level(RED_GPIO, ~state);
-    printf("red turned: %d\n", ~state);
-    state = (~state) & 0x1;
+    state = ~state;
+    state &= 0x01;
+    gpio_set_level(RED_GPIO, state);
+    printf("red turned: %d\n", state);
 
     return ESP_OK;
 }
@@ -19,10 +19,10 @@ esp_err_t red_uri_handler(httpd_req_t* req)
 esp_err_t yellow_uri_handler(httpd_req_t* req)
 {
     static uint8_t state = 0;
-    state &= 0x1;
-    gpio_set_level(YELLOW_GPIO, ~state);
-    printf("yellow turned: %d\n", ~state);
-    state = (~state) & 0x1;
+    state = ~state;
+    state &= 0x01;
+    gpio_set_level(YELLOW_GPIO, state);
+    printf("yellow turned: %d\n", state);
 
     return ESP_OK;
 }
@@ -30,10 +30,11 @@ esp_err_t yellow_uri_handler(httpd_req_t* req)
 esp_err_t green_uri_handler(httpd_req_t* req)
 {
     static uint8_t state = 0;
-    state &= 0x1;
-    gpio_set_level(GREEN_GPIO, ~state);
-    printf("greeb turned: %d\n", ~state);
-    state = (~state) & 0x1;
+    state = ~state;
+    state &= 0x01;
+    gpio_set_level(GREEN_GPIO, state);
+    printf("greeb turned: %d\n", state);
+
 
     return ESP_OK;
 }
