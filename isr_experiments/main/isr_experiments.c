@@ -19,15 +19,16 @@ uint32_t shine_period = 500000;
 
 void led_handler(void* arg)
 {
-    static uint8_t state = 0;
+    static volatile uint8_t state = 0;
 
     timer_group_clr_intr_status_in_isr(TIMER_GROUP_0, TIMER_0);
+    //printf("intr status was cleared\n");
     timer_group_enable_alarm_in_isr(TIMER_GROUP_0, TIMER_0);
 
     state = ~state;
     state &= 0x01;
     gpio_set_level(2, state);
-    printf("yellow turned: %d\n", state);
+    // printf("yellow turned: %d\n", state);
 
     // TIMERG0.int_clr_timers.t0 = 1;
 }
@@ -47,17 +48,27 @@ void app_main(void)
 
     timer_init(TIMER_GROUP_0, TIMER_0, &timer_config);
 
+    printf("timer initted\n");
+
     timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, delay);
+
+    printf("alarm value set\n");
 
     timer_enable_intr(TIMER_GROUP_0, TIMER_0);
 
+    printf("timer interrupt enabled\n");
+
     timer_isr_register(TIMER_GROUP_0, TIMER_0, &led_handler, NULL, ESP_INTR_FLAG_LEVEL1, NULL);
+
+    printf("isr registered\n");
 
     // gpio setup
     gpio_reset_pin(2);
     gpio_set_direction(2, GPIO_MODE_OUTPUT);
 
     timer_start(TIMER_GROUP_0, TIMER_0);
+
+    // printf("timer started\n");
 
     // timer_deinit(TIMER_GROUP_0, TIMER_0);
 }
